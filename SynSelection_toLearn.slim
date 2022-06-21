@@ -1,0 +1,173 @@
+// set up a simple neutral simulation
+initialize() {
+
+	// This are the beginning parameters for the lethal mutations. Might not need to use them. 
+	syn_s = asFloat(10E-4); // Range from 10E-4 to 10E-2
+	syn_nonselected_prop = asFloat(0); // Percentage of syn non-selected. For the future.
+	defineConstant("path","/Users/azurita/Documents/UCLA/Lohmueller_Lab/Synonimous_Selection/sym_outputs"); //insert path, for the output
+
+	// set the mutation rate (How is this decided/does it make sense to change at all?)
+	initializeMutationRate(1.5e-8);
+
+	//total sequence length (How is this decided/does it make sense to change at all? Related to the mutation rate?) Given this lenght, we expect 1.5 muts per individual per generation.
+	defineConstant("seqLength", 100000000);
+
+	// Initializing mutation types. What are this types? 
+	//Synonimous muts.	
+	initializeMutationType("m1", 0.5, "f", syn_s); // So this is a fixed selection coeffitient, set to 0, which identifies a "syn" mutation. However, we want to generate "syn" mutations with f different than 0, so changing. 
+	
+	//m2 mutation type: deleterious
+	initializeMutationType("m2", 0.5,"g", -0.01314833,0.186);
+	
+	//m3: Syn muts that have no selection coeffitient. Use as a percentage for the future.  
+	//initializeMutationType("m3", 0.5, "f", 0.0);
+	
+	//Initializing genomic element TYPES. This is where we can set what kind of muts they have. The last argument is the proportion of each 
+	//mutation the genetic element will have. Here, there are three initiated elements. 
+	//set ratio of NS:SYN as 2.31:1 but with 3.1% of NS muts as neutral (Hubert 2017)
+	initializeGenomicElementType("g1", c(m1, m2), c(30.2, 69.8));
+	initializeGenomicElementType("g2", m1, 1); //This is suppose to be a non-coding element, but it's actually ignored in the code.
+	initializeGenomicElementType("g3", m1, 1); //This is supposed to be an intron, but they are ignored. 
+	
+	// Generate random genes along the chromosome
+	base = 0;
+	nc_length_total = 0;
+	in_length_total = 0;
+	ex_length_total = 0;
+	while (base < seqLength) {
+		// make a non-coding region
+		nc_length = asInteger(runif(1, 500, 50000)); 
+		nc_length_total = nc_length_total + nc_length;
+		
+		//ignore noncoding elements for computational efficiency <--- reword probably
+		//initializeGenomicElement(g2, base, base + nc_length - 1);
+		base = base + nc_length;
+		
+		// make first exon
+		ex_length = asInteger(rlnorm(1, log(50), log(2))) + 1; ex_length_total = ex_length_total + ex_length;
+		initializeGenomicElement(g1, base, base + ex_length - 1);
+		base = base + ex_length;
+		
+		// make additional intron-exon pairs
+		do {
+			in_length = asInteger(rlnorm(1, log(100), log(1.5))) + 10; in_length_total = in_length_total + in_length;
+			//initializeGenomicElement(g3, base, base + in_length - 1);
+			base = base + in_length;
+			ex_length = asInteger(rlnorm(1, log(50), log(2))) + 1; ex_length_total = ex_length_total + ex_length;
+			initializeGenomicElement(g1, base, base + ex_length - 1);
+			base = base + ex_length;
+		} while (runif(1) < 0.8); 
+		
+	}
+	
+	// final non-coding region
+	nc_length = asInteger(runif(1, 100, 5000));
+	//initializeGenomicElement(g2, base, base + nc_length - 1);
+	
+	// uniform recombination along the chromosome
+	initializeRecombinationRate(1e-8);
+}
+
+// create a population of 10000 individuals
+1
+{
+	sim.addSubpop("p1", 10000);
+}
+
+
+//change the population size - could increase or decrease
+//100000 {
+//	p1.setSubpopulationSize(10000);
+//}
+
+10 {
+	p1.setSubpopulationSize(10000);
+}
+
+
+// run to generation 10100. Why this number? Worth changing? 
+//101000
+//{
+//	sim.simulationFinished();
+//}
+
+//output SFS, for each generation
+//1:101000 late(){
+	
+//	if (sim.generation % 5000 == 0) { print(sim.generation); } //Where is this printing? Output screen? Might make an output file. 
+
+//}
+
+
+// run to generation 10100. Why this number? Worth changing? 
+12
+{
+	sim.simulationFinished();
+}
+
+//output SFS, for each generation
+1:12 late(){
+	
+	if (sim.generation % 4 == 0) { print(sim.generation); } //Where is this printing? Output screen? Might make an output file. 
+
+}
+
+// Output the SFSs at the end of the simulation for varing sample sizes
+12 late() {
+	
+	ss = c(10, 100, 1000);
+	
+	for (sample_size in ss) {
+		
+		sampledHaploidGenomes= sample(p1.genomes, sample_size); //get 10 genomes
+		m1MutationsInSample=unique(sampledHaploidGenomes.mutationsOfType(m1)); //get unique m1 mutations in sample, returns vector of m1 mutations 
+		m1counts=sampledHaploidGenomes.mutationCountsInGenomes(mutations=m1MutationsInSample); //m1counts = integer vector w/ frequency counts of mutations, count for each 																																			position																																																												
+		m2MutationsInSample=unique(sampledHaploidGenomes.mutationsOfType(m2)); //get unique m1 mutations in sample, returns vector of m1 mutations 
+		m2counts=sampledHaploidGenomes.mutationCountsInGenomes(mutations=m2MutationsInSample); //m1counts = integer vector w/ frequency counts of mutations, count for each 																																		position																										
+		//m3MutationsInSample=unique(sampledHaploidGenomes.mutationsOfType(m3)); //get unique m1 mutations in sample, returns vector of m1 mutations 
+		//m3counts=sampledHaploidGenomes.mutationCountsInGenomes(mutations=m3MutationsInSample); //m1counts = integer vector w/ frequency counts of mutations, count for each position		
+		m1_sfs = c();
+		m2_sfs = c();
+		//m3_sfs = c();
+		
+		for (i in seq(1,sample_size)){ //for 1 to 10 Not sure how this works, ask Chris
+			
+			count = sum(m1counts==i); //i = frequency, ex sum counts that equal 1, 2, 3, 4....10
+			m1_sfs = c(m1_sfs, count);
+			
+			count = sum(m2counts==i);
+			m2_sfs = c(m2_sfs, count);
+			
+			//count = sum(m3counts==i);
+			//m3_sfs = c(m3_sfs, count);
+		
+		}
+		
+		
+		//sfs for synonymous
+		neu_sfs = m1_sfs;
+		neu_to_print = paste(asString(neu_sfs), sep = "	");
+		towrite = paste("syn_sfs_E4_", sample_size, ".tsv", sep = "");
+		fullpath = paste(path, towrite, sep = "/");
+		writeFile(fullpath, neu_to_print, append = T);
+		//print("printed");
+		
+		catn(neu_to_print);
+		
+		//sfs for nonsynonymous
+		del_sfs = m2_sfs; //+ m3_sfs;
+		del_to_print = paste(asString(del_sfs), sep = "	");
+		towrite = paste("nonsyn_sfs_E4_", sample_size, ".tsv", sep = "");
+		fullpath = paste(path, towrite, sep = "/");
+		writeFile(fullpath, del_to_print, append = T);
+		
+		//sfs for lethal
+		//m3_to_print = paste(asString(m3_sfs), sep = "	");
+		//towrite = paste("lethal_sfs_0.01_0.5_7_", sample_size, ".tsv", sep = "");
+		//fullpath = paste(path, towrite, sep = "/");
+		//writeFile(fullpath, m3_to_print, append = T);
+	
+	}
+
+
+}
