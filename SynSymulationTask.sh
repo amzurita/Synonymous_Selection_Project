@@ -9,7 +9,7 @@
 #$ -M amzurita
 #$ -l highp
 #$ -l h_data=16G
-#$ -l time=24:00:00
+#$ -l time=48:00:00
 #$ -m bea
 
 #Load modules to be used
