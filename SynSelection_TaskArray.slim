@@ -4,8 +4,16 @@ initialize() {
 	// This are the beginning parameters for the syn selection coeffitient and proportion of selected syn mutations.
 	// syn_s = asFloat(10E-4); // Range from 10E-4 to 10E-2, specified in the input by -d
 	syn_nonselected_prop = asFloat(0); // Percentage of syn non-selected. For the future.
-	defineConstant("path","/u/project/klohmuel/amzurita/Synonimous_Selection_Simulations"); //insert path, for the output
+	defineConstant("path","/u/project/klohmuel/amzurita/Synonimous_Selection_Simulations/sym_outputs"); //insert path, for the output
 	defineConstant("name_append",run_name_output);
+
+	//debugging
+	print(path);
+	print(name_append);
+	towrite = paste("syn_sfs_", name_append, "sample_size", ".tsv", sep = "");
+	fullpath = paste(path, towrite, sep = "/");
+	print(towrite);
+	print(fullpath);
 
 	// set the mutation rate
 	initializeMutationRate(1.5e-8);
@@ -129,7 +137,7 @@ initialize() {
 		//sfs for nonsynonymous
 		del_sfs = m2_sfs; //+ m3_sfs;
 		del_to_print = paste(asString(del_sfs), sep = "	");
-		towrite = paste("nonsyn_sfs_E4_", sample_size, ".tsv", sep = "");
+		towrite = paste("nonsyn_sfs_", name_append, sample_size, ".tsv", sep = "");
 		fullpath = paste(path, towrite, sep = "/");
 		writeFile(fullpath, del_to_print, append = T);
 

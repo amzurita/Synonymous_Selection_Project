@@ -8,6 +8,7 @@
 #$ -cwd
 #$ -M amzurita
 #$ -l highp
+#$ -l group=eeskin
 #$ -l h_data=16G
 #$ -l time=48:00:00
 #$ -m bea
@@ -17,4 +18,4 @@
 
 . /u/local/Modules/default/init/modules.sh
 
-/u/project/klohmuel/amzurita/Tools/slim_build/slim -d syn_s=10e-4 "run_name_output='E4_$SGE_TASK_ID_'" SynSelection_TaskArray.slim
+/u/project/klohmuel/amzurita/Tools/slim_build/slim -d syn_s=10e-4 -d "run_name_output='E4_${SGE_TASK_ID}_'" SynSelection_TaskArray.slim
