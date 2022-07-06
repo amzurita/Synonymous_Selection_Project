@@ -18,4 +18,4 @@
 
 . /u/local/Modules/default/init/modules.sh
 
-/u/project/klohmuel/amzurita/Tools/slim_build/slim -d syn_s=10e-2 -d "run_name_output='E2_${SGE_TASK_ID}_'" SynSelection_TaskArray.slim
+/u/project/klohmuel/amzurita/Tools/slim_build/slim -d syn_s=-10e-2 -d "run_name_output='E2_${SGE_TASK_ID}_'" SynSelection_TaskArray.slim

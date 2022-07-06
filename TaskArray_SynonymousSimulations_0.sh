@@ -1,8 +1,8 @@
 #!/bin/bash
 
 #EDIT THIS LINES:
-#$ -N SynSimulations_E3_$JOB_ID.$TASK_ID
-#$ -o /u/scratch/a/amzurita/logs/out_SynSimulations_E3_$JOB_ID.$TASK_ID.txt
+#$ -N SynSimulations_0_$JOB_ID.$TASK_ID
+#$ -o /u/scratch/a/amzurita/logs/out_SynSimulations_0_$JOB_ID.$TASK_ID.txt
 
 #$ -j y
 #$ -cwd
@@ -18,4 +18,4 @@
 
 . /u/local/Modules/default/init/modules.sh
 
-/u/project/klohmuel/amzurita/Tools/slim_build/slim -d syn_s=-10e-3 -d "run_name_output='E3_${SGE_TASK_ID}_'" SynSelection_TaskArray.slim
+/u/project/klohmuel/amzurita/Tools/slim_build/slim -d syn_s=0 -d "run_name_output='0_${SGE_TASK_ID}_'" SynSelection_TaskArray.slim
