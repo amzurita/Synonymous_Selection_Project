@@ -2,9 +2,18 @@
 initialize() {
 
 	// This are the beginning parameters for the syn selection coeffitient and proportion of selected syn mutations.
-	syn_s = asFloat(10E-4); // Range from 10E-4 to 10E-2
+	// syn_s = asFloat(10E-4); // Range from 10E-4 to 10E-2, specified in the input by -d
 	syn_nonselected_prop = asFloat(0); // Percentage of syn non-selected. For the future.
-	defineConstant("path","/u/project/klohmuel/amzurita/Synonimous_Selection_Simulations"); //insert path, for the output
+	defineConstant("path","/u/project/klohmuel/amzurita/Synonimous_Selection_Simulations/sym_outputs"); //insert path, for the output
+	defineConstant("name_append",run_name_output);
+
+	//debugging
+	print(path);
+	print(name_append);
+	towrite = paste("syn_sfs_", name_append, "sample_size", ".tsv", sep = "");
+	fullpath = paste(path, towrite, sep = "/");
+	print(towrite);
+	print(fullpath);
 
 	// set the mutation rate
 	initializeMutationRate(1.5e-8);
@@ -23,7 +32,7 @@ initialize() {
 	initializeMutationType("m3", 0.5, "f", 0.0);
 
 	//set ratio of NS:SYN as 2.31:1 but with 3.1% of NS muts as neutral
-	//22% of SYN mutations are selected for, while the rest of the mutations are not selected for 
+	//22% of SYN mutations are selected for, while the rest of the mutations are not selected for
 	initializeGenomicElementType("g1", c(m1, m2, m3), c(30.2, 15.35, 54.45));
 	initializeGenomicElementType("g2", m1, 1); //This is suppose to be a non-coding element. They are ignored.
 	initializeGenomicElementType("g3", m1, 1); //This is supposed to be an intron.
@@ -62,9 +71,6 @@ initialize() {
 	// final non-coding region
 	nc_length = asInteger(runif(1, 100, 5000));
 	//initializeGenomicElement(g2, base, base + nc_length - 1);
-
-	catn(ex_length_total/seqLength); //Proportion of chromosome that is exons
-	catn((ex_length_total/seqLength)*seqLength);
 
 	// uniform recombination along the chromosome
 	initializeRecombinationRate(1e-8);
@@ -124,7 +130,7 @@ initialize() {
 		//sfs for synonymous
 		neu_sfs = m1_sfs;
 		neu_to_print = paste(asString(neu_sfs), sep = "	");
-		towrite = paste("syn_sfs_E4_", sample_size, ".tsv", sep = "");
+		towrite = paste("syn_sfs_", name_append, sample_size, ".tsv", sep = "");
 		fullpath = paste(path, towrite, sep = "/");
 		writeFile(fullpath, neu_to_print, append = T);
 		//print("printed");
@@ -132,7 +138,7 @@ initialize() {
 		//sfs for nonsynonymous
 		del_sfs = m2_sfs; //+ m3_sfs;
 		del_to_print = paste(asString(del_sfs), sep = "	");
-		towrite = paste("nonsyn_sfs_E4_", sample_size, ".tsv", sep = "");
+		towrite = paste("nonsyn_sfs_", name_append, sample_size, ".tsv", sep = "");
 		fullpath = paste(path, towrite, sep = "/");
 		writeFile(fullpath, del_to_print, append = T);
 
