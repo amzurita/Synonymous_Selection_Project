@@ -7,6 +7,11 @@ initialize() {
 	defineConstant("path","/u/project/klohmuel/amzurita/Synonimous_Selection_Simulations/sym_outputs"); //insert path, for the output
 	defineConstant("name_append",run_name_output);
 
+	//For SLIM
+	//run_name_output="Test";
+	//name_append="Test";
+	//syn_s = asFloat(10E-4);
+
 	//debugging
 	print(path);
 	print(name_append);
@@ -33,7 +38,7 @@ initialize() {
 
 	//set ratio of NS:SYN as 2.31:1 but with 3.1% of NS muts as neutral
 	//22% of SYN mutations are selected for, while the rest of the mutations are not selected for
-	initializeGenomicElementType("g1", c(m1, m2, m3), c(30.2, 15.35, 54.45));
+	initializeGenomicElementType("g1", c(m1, m2, m3), c(6.644, 69.8, 23.556));
 	initializeGenomicElementType("g2", m1, 1); //This is suppose to be a non-coding element. They are ignored.
 	initializeGenomicElementType("g3", m1, 1); //This is supposed to be an intron.
 
@@ -83,12 +88,12 @@ initialize() {
 }
 
 // change the population size - could increase or decrease
-100000 {
+100000 {    //100000
 	p1.setSubpopulationSize(10000);
 }
 
 // run to generation 10100.
-101000
+101000      //101000
 {
 	sim.simulationFinished();
 }
@@ -111,10 +116,14 @@ initialize() {
 		sampledHaploidGenomes= sample(p1.genomes, sample_size); //get 10 genomes
 		m1MutationsInSample=unique(sampledHaploidGenomes.mutationsOfType(m1)); //get unique m1 mutations in sample, returns vector of m1 mutations
 		m1counts=sampledHaploidGenomes.mutationCountsInGenomes(mutations=m1MutationsInSample); //m1counts = integer vector w/ frequency counts of mutations, count for each 																																			position
-		m2MutationsInSample=unique(sampledHaploidGenomes.mutationsOfType(m2)); //get unique m1 mutations in sample, returns vector of m1 mutations
+		m2MutationsInSample=unique(sampledHaploidGenomes.mutationsOfType(m2)); //get unique m2 mutations in sample, returns vector of m2 mutations
 		m2counts=sampledHaploidGenomes.mutationCountsInGenomes(mutations=m2MutationsInSample); //m1counts = integer vector w/ frequency counts of mutations, count for each 																																		position
+		m3MutationsInSample=unique(sampledHaploidGenomes.mutationsOfType(m3)); //get unique m3 mutations in sample, returns vector of m3 mutations
+		m3counts=sampledHaploidGenomes.mutationCountsInGenomes(mutations=m3MutationsInSample); //m1counts = integer vector w/ frequency counts of mutations, count for each 																																		position
+
 		m1_sfs = c();
 		m2_sfs = c();
+		m3_sfs = c();
 
 		for (i in seq(1,sample_size)){ //for 1 to 10 Not sure how this works, ask Chris
 
@@ -123,6 +132,9 @@ initialize() {
 
 			count = sum(m2counts==i);
 			m2_sfs = c(m2_sfs, count);
+
+			count = sum(m3counts==i);
+			m3_sfs = c(m3_sfs, count);
 
 		}
 
@@ -133,14 +145,14 @@ initialize() {
 		towrite = paste("syn_sfs_", name_append, sample_size, ".tsv", sep = "");
 		fullpath = paste(path, towrite, sep = "/");
 		writeFile(fullpath, neu_to_print, append = T);
-		//print("printed");
 
 		//sfs for nonsynonymous
-		del_sfs = m2_sfs; //+ m3_sfs;
+		del_sfs = m2_sfs + m3_sfs;
 		del_to_print = paste(asString(del_sfs), sep = "	");
 		towrite = paste("nonsyn_sfs_", name_append, sample_size, ".tsv", sep = "");
 		fullpath = paste(path, towrite, sep = "/");
 		writeFile(fullpath, del_to_print, append = T);
+		print("printed");
 
 	}
 
