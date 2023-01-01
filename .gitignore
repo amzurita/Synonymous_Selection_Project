@@ -2,7 +2,7 @@
 .DS_store
 
 #Files
-SynSelection_inLaptop.slim
+Simulations/SynSelection_inLaptop.slim
 
 #Folders
 /sym_outputs/*
