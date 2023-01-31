@@ -488,7 +488,7 @@ class DemographicInference():
                             'growth demographic model.')
             elif model == 'two_epoch':
                 # Allow for growth or decay
-                upper_bound = [1000, 40]
+                upper_bound = [3000, 500]
                 lower_bound = [1.001, 0]
                 # 25 initial guesses
                 initial_guesses = []
@@ -500,23 +500,23 @@ class DemographicInference():
                 initial_guesses.append([300, 15])
                 initial_guesses.append([350, 15])
                 initial_guesses.append([400, 2])
-                initial_guesses.append([50, 0.00001])
-                initial_guesses.append([150, 1])
-                initial_guesses.append([400, 2])
-                initial_guesses.append([450, 2])
-                initial_guesses.append([500, 15])
-                initial_guesses.append([35, 0.000001])
+                initial_guesses.append([1000, 40])
+                initial_guesses.append([1000, 90])
+                initial_guesses.append([1000, 150])
+                initial_guesses.append([1700, 150])
+                initial_guesses.append([1900, 150])
+                initial_guesses.append([1800, 200])
                 initial_guesses.append([170, 0.000001])
                 initial_guesses.append([190, 15])
                 initial_guesses.append([1.02, 0.2])
                 initial_guesses.append([1.02, 0.3])
                 initial_guesses.append([160, 0.00001])
-                initial_guesses.append([1.02, 10])
-                initial_guesses.append([50, 10])
-                initial_guesses.append([13, 15])
-                initial_guesses.append([25, 15])
-                initial_guesses.append([1.01, 5])
-                initial_guesses.append([1.01, 6])
+                initial_guesses.append([1800, 100])
+                initial_guesses.append([1800, 350])
+                initial_guesses.append([2000, 250])
+                initial_guesses.append([2000, 280])
+                initial_guesses.append([1700, 300])
+                initial_guesses.append([1700, 380])
                 demography_file = two_epoch_demography
                 func_ex = dadi.Numerics.make_extrap_log_func(self.two_epoch)
                 logger.info('Beginning demographic inference for two-epoch '
@@ -634,15 +634,15 @@ class DemographicInference():
                     p0 = initial_guesses[i]
                     # Randomly perturb parameters before optimization.
                     p0 = dadi.Misc.perturb_params(
-                        p0, fold=1, upper_bound=None,
-                        lower_bound=None)
+                        p0, fold=1, upper_bound=upper_bound,
+                        lower_bound=lower_bound)
                     logger.info(
                         'Beginning optimization with guess, {0}.'.format(p0))
                     # Fit MLE demographic model
                     popt = dadi.Inference.optimize_log_lbfgsb(
                         p0=p0, data=syn_data, model_func=func_ex, pts=pts_l,
-                        lower_bound=None,
-                        upper_bound=None,
+                        lower_bound=lower_bound,
+                        upper_bound=upper_bound,
                         verbose=len(p0), maxiter=50)
                     logger.info(
                         'Finished optimization with guess, ' + str(p0) + '.')
@@ -722,26 +722,23 @@ class DemographicInference():
         # Infer DFE based on best demographic parameters
         demog_params = model_params_dict[best_model]
 
-        # Define standard mutation rates
+        # Define standard mutation rates and lenghts
+        Ls = 9728061 #Change this as necessary, currently set to E4_Zero lenght
         mu = 1.5E-8 # Change this as necessary
-        Ne = theta_syn / 4 / mu
-        if (best_model == 'exponential_growth' or best_model == 'two_epoch' \
-            or best_model == 'one_epoch'):
-            Na = Ne / float(demog_params[0])
-        else:
-            Na = Ne / float(demog_params[1])
+        Na = theta_syn / (4 * mu * Ls)
         max_s = 0.5
         max_gam = max_s * 2 * Na
 
+        #Change this according to sample size
         # Redefine grid for MLE search
-        pts_l = [1200, 1400, 1600]
+        pts_l = [200, 210, 220]
 
         logger.info('Generating spectra object.')
 
         spectra = DFE.Cache1D(demog_params, nonsyn_ns,
             func_sel, pts_l=pts_l,
-            gamma_bounds=(1e-5, 500),
-            gamma_pts=100, verbose=True)
+            gamma_bounds=(1e-5, max_gam),
+            gamma_pts=300, verbose=True, mp=False)
 
         # Assume gamma-distributed DFE
         BETAinit = 3 * max_gam
@@ -764,11 +761,15 @@ class DemographicInference():
             popt = numpy.copy(dadi.Inference.optimize_log(p0, nonsyn_data, spectra.integrate, pts=None,
                       func_args=[DFE.PDFs.gamma, theta_nonsyn],
                       lower_bound=lower_bound, upper_bound=upper_bound,
-                      verbose=len(best_params), maxiter=5, multinom=True))
+                      verbose=len(best_params), maxiter=25, multinom=True))
             logger.info(
                 'Finished optomization, results are {0}.'.format(popt))
-            gamma_max_likelihoods.append(popt[0])
-            gamma_guesses[popt[0]] = popt
+            #Compute the poisson log likelihood
+            expected_sfs = spectra.integrate(
+                popt, None, DFE.PDFs.gamma, theta_nonsyn, None)
+            poisson_ll_nonsyn = dadi.Inference.ll(model=expected_sfs, data=nonsyn_data)
+            gamma_max_likelihoods.append(poisson_ll_nonsyn)
+            gamma_guesses[poisson_ll_nonsyn] = popt
 
         logger.info('Finished DFE inference.')
 
@@ -794,6 +795,10 @@ class DemographicInference():
                     best_popt, None, DFE.PDFs.gamma, theta_nonsyn, None)
                 f.write('The population-scaled '
                         'best-fit parameters: {0}.\n'.format(best_popt))
+                #Compute the poisson likelihood of the nonsyn model given by the gamma
+                poisson_ll_nonsyn = dadi.Inference.ll(model=expected_sfs, data=nonsyn_data)
+                f.write('The maximum poisson log '
+                        'composite likelihood is: {0}.\n'.format(poisson_ll_nonsyn))
                 # Divide output scale parameter by 2 * N_a
                 f.write(
                     'The non-scaled best-fit parameters: '

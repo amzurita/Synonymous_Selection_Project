@@ -20,4 +20,4 @@ module load anaconda3
 
 conda activate dadienv
 
-python fit_demography_and_dfe_E5_TwoEpoch_Outputll.py Summed_SFS/Syn_SFS_DadiInput_E5.txt Summed_SFS/NonSyn_SFS_DadiInput_E5.txt E5_TwoEpoch_Outputll
+python fit_demography_and_dfe_E5_TwoEpoch.py Summed_SFS/Syn_SFS_DadiInput_E5.txt Summed_SFS/NonSyn_SFS_DadiInput_E5.txt E5_TwoEpoch_SelectionFuncTry7

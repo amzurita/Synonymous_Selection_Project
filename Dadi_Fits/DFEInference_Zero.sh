@@ -20,4 +20,4 @@ module load anaconda3
 
 conda activate dadienv
 
-python fit_demography_and_dfe_Zero_TwoEpoch.py Summed_SFS/Syn_SFS_DadiInput_0_23Syms.txt Summed_SFS/NonSyn_SFS_DadiInput_0_23Syms.txt Zero_TwoEpoch_Try10
+python fit_demography_and_dfe_Zero_TwoEpoch.py Summed_SFS/Syn_SFS_DadiInput_0_23Syms.txt Summed_SFS/NonSyn_SFS_DadiInput_0_23Syms.txt Zero_DEBUGSelection

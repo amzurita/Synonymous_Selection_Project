@@ -722,26 +722,28 @@ class DemographicInference():
         # Infer DFE based on best demographic parameters
         demog_params = model_params_dict[best_model]
 
-        # Define standard mutation rates
+        # Define standard mutation rates and lenghts
+        Ls = 19457121 #Change this as necessary, currently set to E4
         mu = 1.5E-8 # Change this as necessary
-        Ne = theta_syn / 4 / mu
-        if (best_model == 'exponential_growth' or best_model == 'two_epoch' \
-            or best_model == 'one_epoch'):
-            Na = Ne / float(demog_params[0])
-        else:
-            Na = Ne / float(demog_params[1])
+        Na = theta_syn / (4 * mu * Ls)
         max_s = 0.5
         max_gam = max_s * 2 * Na
 
+        #Change this according to sample size
         # Redefine grid for MLE search
-        pts_l = [1200, 1400, 1600]
+        pts_l = [200, 210, 220]
 
         logger.info('Generating spectra object.')
 
-        spectra = DFE.Cache1D(demog_params, nonsyn_ns,
-            func_sel, pts_l=pts_l,
-            gamma_bounds=(1e-5, 500),
-            gamma_pts=100, verbose=True)
+        #spectra = DFE.Cache1D(demog_params, nonsyn_ns,
+        #    func_sel, pts_l=pts_l,
+        #    gamma_bounds=(1e-5, max_gam),
+        #    gamma_pts=300, verbose=True, mp=False)
+
+        spectra = Selection.spectra(demog_params, nonsyn_ns,
+                                    func_sel,
+                                    pts_l=pts_l, int_bounds=(1e-5, max_gam),
+                                    Npts=300, echo=True, mp=False)
 
         # Assume gamma-distributed DFE
         BETAinit = 3 * max_gam
@@ -764,11 +766,15 @@ class DemographicInference():
             popt = numpy.copy(dadi.Inference.optimize_log(p0, nonsyn_data, spectra.integrate, pts=None,
                       func_args=[DFE.PDFs.gamma, theta_nonsyn],
                       lower_bound=lower_bound, upper_bound=upper_bound,
-                      verbose=len(best_params), maxiter=5, multinom=True))
+                      verbose=len(best_params), maxiter=25, multinom=False))
             logger.info(
                 'Finished optomization, results are {0}.'.format(popt))
-            gamma_max_likelihoods.append(popt[0])
-            gamma_guesses[popt[0]] = popt
+            #Compute the poisson log likelihood
+            expected_sfs = spectra.integrate(
+                popt, None, DFE.PDFs.gamma, theta_nonsyn, None)
+            poisson_ll_nonsyn = dadi.Inference.ll(model=expected_sfs, data=nonsyn_data)
+            gamma_max_likelihoods.append(poisson_ll_nonsyn)
+            gamma_guesses[poisson_ll_nonsyn] = popt
 
         logger.info('Finished DFE inference.')
 
@@ -794,6 +800,10 @@ class DemographicInference():
                     best_popt, None, DFE.PDFs.gamma, theta_nonsyn, None)
                 f.write('The population-scaled '
                         'best-fit parameters: {0}.\n'.format(best_popt))
+                #Compute the poisson likelihood of the nonsyn model given by the gamma
+                poisson_ll_nonsyn = dadi.Inference.ll(model=expected_sfs, data=nonsyn_data)
+                f.write('The maximum poisson log '
+                        'composite likelihood is: {0}.\n'.format(poisson_ll_nonsyn))
                 # Divide output scale parameter by 2 * N_a
                 f.write(
                     'The non-scaled best-fit parameters: '
