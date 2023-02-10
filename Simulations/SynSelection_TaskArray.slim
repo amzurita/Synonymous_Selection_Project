@@ -58,7 +58,7 @@ initialize() {
 		// make additional intron-exon pairs
 		do {
 			in_length = asInteger(rlnorm(1, log(100), log(1.5))) + 10; in_length_total = in_length_total + in_length;
-			initializeGenomicElement(g3, base, base + in_length - 1);
+			// initializeGenomicElement(g3, base, base + in_length - 1);
 			base = base + in_length;
 			ex_length = asInteger(rlnorm(1, log(50), log(2))) + 1; ex_length_total = ex_length_total + ex_length;
 			initializeGenomicElement(g1, base, base + ex_length - 1);
