@@ -22,7 +22,6 @@ import scipy.optimize
 
 import pickle
 
-
 class ArgumentParserNoArgHelp(argparse.ArgumentParser):
     """Like *argparse.ArgumentParser*, but prints help when no arguments."""
 
@@ -490,35 +489,35 @@ class DemographicInference():
                             'growth demographic model.')
             elif model == 'two_epoch':
                 # Allow for growth or decay
-                upper_bound = [400, 20]
+                upper_bound = [3000, 500]
                 lower_bound = [1.001, 0]
                 # 25 initial guesses
                 initial_guesses = []
-                initial_guesses.append([1.01, 5])
-                initial_guesses.append([1.01, 6])
-                initial_guesses.append([50, 5])
-                initial_guesses.append([50, 6])
-                initial_guesses.append([1.02, 10])
-                initial_guesses.append([50, 10])
-                initial_guesses.append([1.03, 5])
-                initial_guesses.append([1.03, 11])
-                initial_guesses.append([1.02, 12])
+                initial_guesses.append([100, 1])
+                initial_guesses.append([90, 2])
+                initial_guesses.append([90, 12])
+                initial_guesses.append([200, 15])
+                initial_guesses.append([250, 16])
+                initial_guesses.append([300, 15])
+                initial_guesses.append([350, 15])
+                initial_guesses.append([400, 2])
+                initial_guesses.append([1000, 40])
+                initial_guesses.append([1000, 90])
+                initial_guesses.append([1000, 150])
+                initial_guesses.append([1700, 150])
+                initial_guesses.append([1900, 150])
+                initial_guesses.append([1800, 200])
+                initial_guesses.append([170, 0.000001])
+                initial_guesses.append([190, 15])
                 initial_guesses.append([1.02, 0.2])
-                initial_guesses.append([1.02, 0.2])
                 initial_guesses.append([1.02, 0.3])
-                initial_guesses.append([1.02, 0.3])
-                initial_guesses.append([1.02, 0.3])
-                initial_guesses.append([1.01, 5])
-                initial_guesses.append([1.01, 6])
-                initial_guesses.append([1.01, 5])
-                initial_guesses.append([1.01, 6])
-                initial_guesses.append([3.33, 0.000001])
-                initial_guesses.append([3.66, 0.000001])
-                initial_guesses.append([13, 15])
-                initial_guesses.append([25, 15])
-                initial_guesses.append([100, 15])
-                initial_guesses.append([25, 5])
-                initial_guesses.append([75, 19])
+                initial_guesses.append([160, 0.00001])
+                initial_guesses.append([1800, 100])
+                initial_guesses.append([1800, 350])
+                initial_guesses.append([2000, 250])
+                initial_guesses.append([2000, 280])
+                initial_guesses.append([1700, 300])
+                initial_guesses.append([1700, 380])
                 demography_file = two_epoch_demography
                 func_ex = dadi.Numerics.make_extrap_log_func(self.two_epoch)
                 logger.info('Beginning demographic inference for two-epoch '
@@ -736,6 +735,8 @@ class DemographicInference():
         pts_l = [1200, 1400, 1600]
 
         logger.info('Generating spectra object.')
+        logger.info('Max gamma:')
+        logger.info(str(max_gam))
 
         spectra = DFE.Cache1D(demog_params, nonsyn_ns,
             func_sel, pts_l=pts_l,

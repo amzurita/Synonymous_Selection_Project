@@ -733,29 +733,32 @@ class DemographicInference():
 
         #Change this according to sample size
         # Redefine grid for MLE search
-        pts_l = [200, 210, 220]
+        pts_l = [1200, 1400, 1600]
 
         logger.info('Generating spectra object.')
 
-        #spectra = DFE.Cache1D(demog_params, nonsyn_ns,
-        #    func_sel, pts_l=pts_l,
-        #    gamma_bounds=(1e-5, max_gam),
-        #    gamma_pts=300, verbose=True, mp=False)
+        spectra = DFE.Cache1D(demog_params, nonsyn_ns,
+            func_sel, pts_l=pts_l,
+            gamma_bounds=(1e-5, max_gam),
+            gamma_pts=100, verbose=True, mp=False)  #mp=True, cpus=4)
 
-        spectra = Selection.spectra(demog_params, nonsyn_ns, func_sel,
-                                    pts_l=pts_l, int_bounds=(1e-5, max_gam),
-                                    Npts=300, echo=True, mp=False)
+        #spectra = Selection.spectra(demog_params, nonsyn_ns, func_sel,
+        #                            pts_l=pts_l, int_bounds=(1e-5, max_gam),
+        #                            Npts=300, echo=True, mp=False)
 
         #Pickle the spectra for future use
-        picklefile = '{0}_spectra.sp'.format(args['outprefix'])
+        picklefile = '{0}_spectra.bpkl'.format(args['outprefix'])
         pickle.dump(spectra, open(picklefile,'wb'))
 
+        #Read a pickle file
+        #spectra=pickle.load(open(picklefile,'rb'))
+        #print(spectra)
 
         # Assume gamma-distributed DFE
         BETAinit = 3 * max_gam
-        initial_guess = [1e-3, BETAinit]
+        initial_guess = [0.2, 1000.] #1000 could be replaced with BETAinit
         upper_beta = 12 * max_gam
-        lower_bound = [1e-3, 0]
+        lower_bound = [1e-3, 1e-2]
         upper_bound = [100, upper_beta]
         dfe_optimization=Selection.gamma_dist
 
@@ -772,23 +775,23 @@ class DemographicInference():
             logger.info(
                 'Beginning optimization with guess, {0}.'.format(p0))
             # MLE search for DFE
-            popt = Selection.optimize_log(p0, nonsyn_data,
-                                          spectra.integrate,
-                                          dfe_optimization,
-                                          theta_nonsyn,
-                                          lower_bound=lower_bound,
-                                          upper_bound=upper_bound,
-                                          verbose=len(p0),
-                                          maxiter=25)
+            #popt = Selection.optimize_log(p0, nonsyn_data,
+            #                              spectra.integrate,
+            #                              dfe_optimization,
+            #                              theta_nonsyn,
+            #                              lower_bound=lower_bound,
+            #                              upper_bound=upper_bound,
+            #                              verbose=len(p0),
+            #                              maxiter=25)
 
-            #popt = numpy.copy(dadi.Inference.optimize_log(p0, nonsyn_data, spectra.integrate, pts=None,
-            #          func_args=[DFE.PDFs.gamma, theta_nonsyn],
-            #          lower_bound=lower_bound, upper_bound=upper_bound,
-            #          verbose=len(best_params), maxiter=25, multinom=True))
+            popt,ll = dadi.Inference.opt(p0, nonsyn_data, spectra.integrate, pts=None,
+                      func_args=[DFE.PDFs.gamma, theta_nonsyn],
+                      lower_bound=lower_bound, upper_bound=upper_bound,
+                      verbose=len(best_params), maxiter=10, multinom=False)
             logger.info(
-                'Finished optomization, results are {0}.'.format(popt))
+                'Finished optomization, results are {0} with potential ll {1}.'.format(popt,ll))
             #Compute the poisson log likelihood
-            expected_sfs = spectra.integrate(popt[1], dfe_optimization, theta_nonsyn)
+            expected_sfs = spectra.integrate(popt, None, DFE.PDFs.gamma, theta_nonsyn, None)
             poisson_ll_nonsyn = dadi.Inference.ll(model=expected_sfs, data=nonsyn_data)
             gamma_max_likelihoods.append(poisson_ll_nonsyn)
             gamma_guesses[poisson_ll_nonsyn] = popt
@@ -813,7 +816,7 @@ class DemographicInference():
             for i in range(25):
                 best_popt = gamma_guesses[gamma_max_likelihoods[i]]
                 # Compute model SFS under inferred DFE
-                expected_sfs = spectra.integrate(popt[1], dfe_optimization, theta_nonsyn)
+                expected_sfs = spectra.integrate(popt, None, DFE.PDFs.gamma, theta_nonsyn, None)
                 f.write('The population-scaled '
                         'best-fit parameters: {0}.\n'.format(best_popt))
                 #Compute the poisson likelihood of the nonsyn model given by the gamma

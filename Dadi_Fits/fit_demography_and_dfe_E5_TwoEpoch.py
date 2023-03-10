@@ -741,8 +741,7 @@ class DemographicInference():
         #    gamma_pts=300, verbose=True, mp=False)
 
         spectra = Selection.spectra(demog_params, nonsyn_ns,
-                                    func_sel,
-                                    pts_l=pts_l, int_bounds=(1e-5, max_gam),
+                                    func_sel, pts_l=pts_l, int_bounds=(1e-5, max_gam),
                                     Npts=300, echo=True, mp=False)
 
         # Assume gamma-distributed DFE

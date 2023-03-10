@@ -449,7 +449,7 @@ class DemographicInference():
         # Optomize parameters for these models.
         #model_list = ['two_epoch', 'three_epoch', 'exponential_growth',
         #              'bottleneck_growth', 'one_epoch']
-        model_list = ['two_epoch','one_epoch']
+        model_list = ['two_epoch', 'one_epoch']
         model_LL_dict = {} # Track best log likelihood of each model
         model_params_dict = {} # Track best params of each model
         for model in model_list:
@@ -514,11 +514,11 @@ class DemographicInference():
                 initial_guesses.append([1.01, 6])
                 initial_guesses.append([3.33, 0.000001])
                 initial_guesses.append([3.66, 0.000001])
+                initial_guesses.append([1.01, 0.000001])
+                initial_guesses.append([1.01, 0.000001])
                 initial_guesses.append([13, 15])
                 initial_guesses.append([25, 15])
                 initial_guesses.append([100, 15])
-                initial_guesses.append([25, 5])
-                initial_guesses.append([75, 19])
                 demography_file = two_epoch_demography
                 func_ex = dadi.Numerics.make_extrap_log_func(self.two_epoch)
                 logger.info('Beginning demographic inference for two-epoch '
@@ -725,10 +725,10 @@ class DemographicInference():
         demog_params = model_params_dict[best_model]
 
         # Define standard mutation rates and lenghts
-        Ls = 9728061 #Change this as necessary, currently set to E4_Zero lenght
+        Ls = 9728061 #Change this as necessary, currently set to E4
         mu = 1.5E-8 # Change this as necessary
         Na = theta_syn / (4 * mu * Ls)
-        max_s = 0.5
+        max_s = 0.5 #0.5 corresponds to lethal
         max_gam = max_s * 2 * Na
 
         #Change this according to sample size
@@ -742,8 +742,8 @@ class DemographicInference():
             gamma_bounds=(1e-5, max_gam),
             gamma_pts=300, verbose=True, mp=True, cpus=4)  #mp=True, cpus=4)
 
-        #spectra = Selection.spectra(demog_params, nonsyn_ns, func_sel,
-        #                            pts_l=pts_l, int_bounds=(1e-5, max_gam),
+        #spectra = Selection.spectra(demog_params, nonsyn_ns,
+        #                            func_sel, pts_l=pts_l, int_bounds=(1e-5, max_gam),
         #                            Npts=300, echo=True, mp=False)
 
         #Pickle the spectra for future use
@@ -756,7 +756,7 @@ class DemographicInference():
 
         # Assume gamma-distributed DFE
         BETAinit = 3 * max_gam
-        initial_guess = [0.2, 1000.] #1000 could be replaced with BETAinit
+        initial_guess = [1e-3, BETAinit]
         upper_beta = 12 * max_gam
         lower_bound = [1e-3, 1e-2]
         upper_bound = [100, upper_beta]
@@ -766,7 +766,6 @@ class DemographicInference():
         gamma_max_likelihoods = []
         gamma_guesses = dict()
 
-
         for i in range(25):
             p0 = initial_guess
             # Randomly perturb around initial guess
@@ -774,16 +773,6 @@ class DemographicInference():
                                           upper_bound=upper_bound)
             logger.info(
                 'Beginning optimization with guess, {0}.'.format(p0))
-            # MLE search for DFE
-            #popt = Selection.optimize_log(p0, nonsyn_data,
-            #                              spectra.integrate,
-            #                              dfe_optimization,
-            #                              theta_nonsyn,
-            #                              lower_bound=lower_bound,
-            #                              upper_bound=upper_bound,
-            #                              verbose=len(p0),
-            #                              maxiter=25)
-
             try:
                 popt,ll = dadi.Inference.opt(p0, nonsyn_data, spectra.integrate, pts=None,
                           func_args=[DFE.PDFs.gamma, theta_nonsyn],
@@ -818,7 +807,7 @@ class DemographicInference():
             f.write('Assuming a gamma-distributed DFE...\n')
             f.write('Some MLE might have failed, check the logger file')
             f.write('Outputting MLE estimates in order.\n')
-            for i in range(len(gamma_max_likelihoods)):
+            for i in range(25):
                 best_popt = gamma_guesses[gamma_max_likelihoods[i]]
                 # Compute model SFS under inferred DFE
                 expected_sfs = spectra.integrate(best_popt, None, DFE.PDFs.gamma, theta_nonsyn, None)
