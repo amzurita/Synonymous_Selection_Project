@@ -451,6 +451,7 @@ class DemographicInference():
         model_list = ['two_epoch','one_epoch']
         model_LL_dict = {} # Track best log likelihood of each model
         model_params_dict = {} # Track best params of each model
+        model_thetas_dict = {} # Track the best syn theta value according to a model
         for model in model_list:
             if model == 'exponential_growth':
                 # Allow for growth or decay
@@ -692,6 +693,7 @@ class DemographicInference():
                     best_scaled_spectrum))
             model_params_dict[model] = best_params
             model_LL_dict[model] = max_likelihood
+            model_thetas_dict[model] = theta_syn
 
         logger.info('Finished demographic inference.')
         logger.info('Beginning DFE inference.')
@@ -722,6 +724,7 @@ class DemographicInference():
 
         # Infer DFE based on best demographic parameters
         demog_params = model_params_dict[best_model]
+        theta_syn = model_thetas_dict[best_model]
 
         # Define standard mutation rates and lenghts
         Ls = 9728061 #Change this as necessary, currently set to E4_Zero lenght

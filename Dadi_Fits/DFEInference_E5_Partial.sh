@@ -9,9 +9,10 @@
 #$ -M amzurita
 #$ -l highp
 #$ -l group=eeskin
-#$ -l h_data=16G
+#$ -l h_data=8G
 #$ -l time=48:00:00
 #$ -m bea
+#$ -pe shared 4
 
 #Load modules to be used
 . /u/local/Modules/default/init/modules.sh
@@ -20,4 +21,4 @@ module load anaconda3
 
 conda activate dadienv
 
-python fit_demography_and_dfe.py Summed_SFS/Syn_SFS_DadiInput_E5_Selected22.txt Summed_SFS/NonSyn_SFS_DadiInput_E5_Selected22.txt E5_TwoEpoch_Partial
+python fit_demography_and_dfe_E5_Partial_MP.py Summed_SFS/Syn_SFS_DadiInput_Selected22_E5.txt Summed_SFS/NonSyn_SFS_DadiInput_Selected22_E5.txt E5_TwoEpoch_Partial_SmallInitial

@@ -64,7 +64,7 @@ initialize() {
 		// make additional intron-exon pairs
 		do {
 			in_length = asInteger(rlnorm(1, log(100), log(1.5))) + 10; in_length_total = in_length_total + in_length;
-			initializeGenomicElement(g3, base, base + in_length - 1);
+			//initializeGenomicElement(g3, base, base + in_length - 1);
 			base = base + in_length;
 			ex_length = asInteger(rlnorm(1, log(50), log(2))) + 1; ex_length_total = ex_length_total + ex_length;
 			initializeGenomicElement(g1, base, base + ex_length - 1);
@@ -140,14 +140,14 @@ initialize() {
 
 
 		//sfs for synonymous
-		neu_sfs = m1_sfs;
+		neu_sfs = m1_sfs + m3_sfs;
 		neu_to_print = paste(asString(neu_sfs), sep = "	");
 		towrite = paste("syn_sfs_", name_append, sample_size, ".tsv", sep = "");
 		fullpath = paste(path, towrite, sep = "/");
 		writeFile(fullpath, neu_to_print, append = T);
 
 		//sfs for nonsynonymous
-		del_sfs = m2_sfs + m3_sfs;
+		del_sfs = m2_sfs;
 		del_to_print = paste(asString(del_sfs), sep = "	");
 		towrite = paste("nonsyn_sfs_", name_append, sample_size, ".tsv", sep = "");
 		fullpath = paste(path, towrite, sep = "/");
