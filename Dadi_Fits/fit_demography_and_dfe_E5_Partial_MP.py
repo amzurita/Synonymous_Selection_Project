@@ -22,6 +22,7 @@ import scipy.optimize
 
 import pickle
 
+
 class ArgumentParserNoArgHelp(argparse.ArgumentParser):
     """Like *argparse.ArgumentParser*, but prints help when no arguments."""
 
@@ -448,7 +449,7 @@ class DemographicInference():
         # Optomize parameters for these models.
         #model_list = ['two_epoch', 'three_epoch', 'exponential_growth',
         #              'bottleneck_growth', 'one_epoch']
-        model_list = ['two_epoch','one_epoch']
+        model_list = ['two_epoch', 'one_epoch']
         model_LL_dict = {} # Track best log likelihood of each model
         model_params_dict = {} # Track best params of each model
         model_thetas_dict = {} # Track the best syn theta value according to a model
@@ -490,35 +491,35 @@ class DemographicInference():
                             'growth demographic model.')
             elif model == 'two_epoch':
                 # Allow for growth or decay
-                upper_bound = [3000, 500]
+                upper_bound = [400, 20]
                 lower_bound = [1.001, 0]
                 # 25 initial guesses
                 initial_guesses = []
-                initial_guesses.append([100, 1])
-                initial_guesses.append([90, 2])
-                initial_guesses.append([90, 12])
-                initial_guesses.append([200, 15])
-                initial_guesses.append([250, 16])
-                initial_guesses.append([300, 15])
-                initial_guesses.append([350, 15])
-                initial_guesses.append([400, 2])
-                initial_guesses.append([1000, 40])
-                initial_guesses.append([1000, 90])
-                initial_guesses.append([1000, 150])
-                initial_guesses.append([1700, 150])
-                initial_guesses.append([1900, 150])
-                initial_guesses.append([1800, 200])
-                initial_guesses.append([170, 0.000001])
-                initial_guesses.append([190, 15])
+                initial_guesses.append([1.43468036, 1.90147531])
+                initial_guesses.append([1.43468036, 1.90147531])
+                initial_guesses.append([1.43468036, 1.90147531])
+                initial_guesses.append([1.43468036, 1.90147531])
+                initial_guesses.append([1.43468036, 1.90147531])
+                initial_guesses.append([1.5504892, 2.30528387])
+                initial_guesses.append([1.5504892, 2.30528387])
+                initial_guesses.append([1.5504892, 2.30528387])
+                initial_guesses.append([1.5504892, 2.30528387])
+                initial_guesses.append([1.02, 0.2])
                 initial_guesses.append([1.02, 0.2])
                 initial_guesses.append([1.02, 0.3])
-                initial_guesses.append([160, 0.00001])
-                initial_guesses.append([1800, 100])
-                initial_guesses.append([1800, 350])
-                initial_guesses.append([2000, 250])
-                initial_guesses.append([2000, 280])
-                initial_guesses.append([1700, 300])
-                initial_guesses.append([1700, 380])
+                initial_guesses.append([1.02, 0.3])
+                initial_guesses.append([1.02, 0.3])
+                initial_guesses.append([1.5504892, 2.30528387])
+                initial_guesses.append([1.5504892, 2.30528387])
+                initial_guesses.append([1.5504892, 2.30528387])
+                initial_guesses.append([1.5504892, 2.30528387])
+                initial_guesses.append([1.5504892, 2.30528387])
+                initial_guesses.append([1.5504892, 2.30528387])
+                initial_guesses.append([1.01, 0.000001])
+                initial_guesses.append([1.01, 0.000001])
+                initial_guesses.append([1.5504892, 2.30528387])
+                initial_guesses.append([1.5504892, 2.30528387])
+                initial_guesses.append([1.5504892, 2.30528387])
                 demography_file = two_epoch_demography
                 func_ex = dadi.Numerics.make_extrap_log_func(self.two_epoch)
                 logger.info('Beginning demographic inference for two-epoch '
@@ -727,10 +728,10 @@ class DemographicInference():
         theta_syn = model_thetas_dict[best_model]
 
         # Define standard mutation rates and lenghts
-        Ls = 9728061 #Change this as necessary, currently set to E4_Zero lenght
+        Ls = 9728061 #Change this as necessary, currently set to E4
         mu = 1.5E-8 # Change this as necessary
         Na = theta_syn / (4 * mu * Ls)
-        max_s = 0.5
+        max_s = 0.5 #0.5 corresponds to lethal
         max_gam = max_s * 2 * Na
 
         #Change this according to sample size
@@ -738,16 +739,14 @@ class DemographicInference():
         pts_l = [1200, 1400, 1600]
 
         logger.info('Generating spectra object.')
-        logger.info('Max gamma:')
-        logger.info(str(max_gam))
 
         spectra = DFE.Cache1D(demog_params, nonsyn_ns,
             func_sel, pts_l=pts_l,
             gamma_bounds=(1e-5, max_gam),
             gamma_pts=300, verbose=True, mp=True, cpus=4)  #mp=True, cpus=4)
 
-        #spectra = Selection.spectra(demog_params, nonsyn_ns, func_sel,
-        #                            pts_l=pts_l, int_bounds=(1e-5, max_gam),
+        #spectra = Selection.spectra(demog_params, nonsyn_ns,
+        #                            func_sel, pts_l=pts_l, int_bounds=(1e-5, max_gam),
         #                            Npts=300, echo=True, mp=False)
 
         #Pickle the spectra for future use
@@ -760,19 +759,15 @@ class DemographicInference():
 
         # Assume gamma-distributed DFE
         BETAinit = 3 * max_gam
-        initial_guess = [0.2, 1000.] #1000 could be replaced with BETAinit
-        upper_beta = 60 * max_gam
+        initial_guess = [1e-3, BETAinit]
+        upper_beta = 12 * max_gam
         lower_bound = [1e-3, 1e-2]
         upper_bound = [100, upper_beta]
         dfe_optimization=Selection.gamma_dist
 
-        logger.info('Upper Bounds for DFE parameters:')
-        logger.info(str(upper_bound))
-
         # Track DFE inferences to find best MLE
         gamma_max_likelihoods = []
         gamma_guesses = dict()
-
 
         for i in range(25):
             p0 = initial_guess
@@ -781,16 +776,6 @@ class DemographicInference():
                                           upper_bound=upper_bound)
             logger.info(
                 'Beginning optimization with guess, {0}.'.format(p0))
-            # MLE search for DFE
-            #popt = Selection.optimize_log(p0, nonsyn_data,
-            #                              spectra.integrate,
-            #                              dfe_optimization,
-            #                              theta_nonsyn,
-            #                              lower_bound=lower_bound,
-            #                              upper_bound=upper_bound,
-            #                              verbose=len(p0),
-            #                              maxiter=25)
-
             try:
                 popt,ll = dadi.Inference.opt(p0, nonsyn_data, spectra.integrate, pts=None,
                           func_args=[DFE.PDFs.gamma, theta_nonsyn],
@@ -825,7 +810,7 @@ class DemographicInference():
             f.write('Assuming a gamma-distributed DFE...\n')
             f.write('Some MLE might have failed, check the logger file')
             f.write('Outputting MLE estimates in order.\n')
-            for i in range(len(gamma_max_likelihoods)):
+            for i in range(25):
                 best_popt = gamma_guesses[gamma_max_likelihoods[i]]
                 # Compute model SFS under inferred DFE
                 expected_sfs = spectra.integrate(best_popt, None, DFE.PDFs.gamma, theta_nonsyn, None)

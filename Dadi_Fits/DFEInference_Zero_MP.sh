@@ -1,8 +1,8 @@
 #!/bin/bash
 
 #EDIT THIS LINES:
-#$ -N DFEInference_Zero_MP
-#$ -o /u/scratch/a/amzurita/logs/out_DFEInference_Zero_MP.txt
+#$ -N DFEInference_Zero_MP_Replicate1
+#$ -o /u/scratch/a/amzurita/logs/out_DFEInference_Zero_MP_Replicate1.txt
 
 #$ -j y
 #$ -cwd
@@ -21,4 +21,4 @@ module load anaconda3
 
 conda activate dadienv
 
-python fit_demography_and_dfe_Zero_TwoEpoch_MP.py Summed_SFS/Syn_SFS_DadiInput_0.txt Summed_SFS/NonSyn_SFS_DadiInput_0.txt Zero_Try3_NoIntrons
+python fit_demography_and_dfe_Zero_TwoEpoch_MP.py Summed_SFS/Syn_SFS_DadiInput_0_Replicate1.txt Summed_SFS/NonSyn_SFS_DadiInput_0_Replicate1.txt Zero_TwoEpoch_Replicate1

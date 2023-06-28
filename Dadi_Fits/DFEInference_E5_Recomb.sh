@@ -1,8 +1,8 @@
 #!/bin/bash
 
 #EDIT THIS LINES:
-#$ -N DFEInference_E5_MP
-#$ -o /u/scratch/a/amzurita/logs/out_DFEInference_E5_MP.txt
+#$ -N DFEInference_E5_Recomb7
+#$ -o /u/scratch/a/amzurita/logs/out_DFEInference_E5_Recomb7.txt
 
 #$ -j y
 #$ -cwd
@@ -21,4 +21,4 @@ module load anaconda3
 
 conda activate dadienv
 
-python fit_demography_and_dfe_E5_TwoEpoch_MP.py Summed_SFS/Syn_SFS_DadiInput_E5.txt Summed_SFS/NonSyn_SFS_DadiInput_E5.txt E5_TwoEpoch_Replicate1
+python fit_demography_and_dfe_E5_TwoEpoch_MP.py Summed_SFS/Syn_SFS_DadiInput_Selected22_Recom7_E5.txt Summed_SFS/NonSyn_SFS_DadiInput_Selected22_Recom7_E5.txt E5_TwoEpoch_Sel22Recom7

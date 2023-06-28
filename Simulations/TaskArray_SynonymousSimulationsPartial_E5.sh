@@ -14,8 +14,8 @@
 #$ -m bea
 
 #EDIT THIS LINE WITH THE NUMBER OF SAMPLES (See the trick at the end of the script to count)
-#$ -t 1-21
+#$ -t 1-220
 
 . /u/local/Modules/default/init/modules.sh
 
-/u/project/klohmuel/amzurita/Tools/slim_build/slim -d syn_s=-10e-5 -d "run_name_output='E5_Selected22_${SGE_TASK_ID}_'" SynSelectionSomeSelected_TaskArray.slim
+/u/project/klohmuel/amzurita/Tools/slim_build/slim -d syn_s=-1e-5 -d recom_rate=1e-8 -d "run_name_output='replicates_E5_Selected22_${SGE_TASK_ID}_'" SynSelectionSomeSelected_TaskArray.slim
