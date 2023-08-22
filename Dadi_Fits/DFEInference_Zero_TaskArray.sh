@@ -24,4 +24,4 @@ module load anaconda3
 
 conda activate dadienv
 
-python fit_demography_and_dfe_Zero_TwoEpoch_MP.py Summed_SFS/Syn_SFS_DadiInput_0_Replicate$SGE_TASK_ID.txt Summed_SFS/NonSyn_SFS_DadiInput_0_Replicate$SGE_TASK_ID.txt Zero_TwoEpoch_Replicate$SGE_TASK_ID
+python fit_demography_and_dfe_Zero_TwoEpoch_MP.py Summed_SFS/Syn_SFS_DadiInput_0_Replicate$SGE_TASK_ID.txt Summed_SFS/NonSyn_SFS_DadiInput_0_Replicate$SGE_TASK_ID.txt Zero_TwoEpochContract_Replicate$SGE_TASK_ID

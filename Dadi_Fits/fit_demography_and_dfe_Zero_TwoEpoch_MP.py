@@ -492,7 +492,7 @@ class DemographicInference():
             elif model == 'two_epoch':
                 # Allow for growth or decay
                 upper_bound = [400, 20]
-                lower_bound = [1.001, 0]
+                lower_bound = [0.001, 0]
                 # 25 initial guesses
                 initial_guesses = []
                 initial_guesses.append([1.01, 5])
@@ -506,13 +506,13 @@ class DemographicInference():
                 initial_guesses.append([1.02, 12])
                 initial_guesses.append([1.02, 0.2])
                 initial_guesses.append([1.02, 0.2])
-                initial_guesses.append([1.02, 0.3])
-                initial_guesses.append([1.02, 0.3])
-                initial_guesses.append([1.02, 0.3])
+                initial_guesses.append([0.5, 0.3])
+                initial_guesses.append([0.8, 0.3])
+                initial_guesses.append([0.5, 0.3])
                 initial_guesses.append([1.01, 5])
                 initial_guesses.append([1.01, 6])
-                initial_guesses.append([1.01, 5])
-                initial_guesses.append([1.01, 6])
+                initial_guesses.append([0.5, 5])
+                initial_guesses.append([0.8, 6])
                 initial_guesses.append([3.33, 0.00001])
                 initial_guesses.append([3.66, 0.00001])
                 initial_guesses.append([13, 15])
@@ -706,6 +706,24 @@ class DemographicInference():
         # Use best fit demographic model for DFE inference
         best_model = max(model_LL_dict, key=model_LL_dict.get)
 
+        #Check that the best model is at least 3 loglikelihood units over the
+        #one epoch ll. This test is based on the Wilks Theorem
+        one_epoch_likelihood=model_LL_dict['one_epoch']
+        logger.info('One Epoch Likelihood: '+str(one_epoch_likelihood))
+
+        #Take the difference
+        best_model_ll=model_LL_dict[best_model]
+        ll_difference_models=best_model_ll-one_epoch_likelihood
+        logger.info('Best model:'+best_model)
+        logger.info('Best model ll: '+str(best_model_ll))
+        logger.info('Model difference in ll:'+str(ll_difference_models))
+        if ll_difference_models > 3:
+            logger.info("Higher than 3 ll difference, best models is:"+best_model)
+        else:
+            logger.info("Lest than 3 ll difference, use one-epoch model")
+            best_model='one_epoch'
+
+
         one_epoch_bool = False
         if best_model == 'exponential_growth':
             func_sel = self.growth_sel
@@ -715,13 +733,10 @@ class DemographicInference():
             func_sel = self.bottlegrowth_sel
         elif best_model == 'three_epoch':
             func_sel = self.three_epoch_sel
-        else:
+        elif best_model == 'one_epoch':
             # Best model is one-epoch
-            # There is no way to incorporate selection in a one-epoch model
-            # We use two epoch assumption instead
             one_epoch_bool = True
-            best_model = 'two_epoch'
-            func_sel = self.two_epoch_sel
+            func_sel = dadi.Demographics1D.snm
 
         # Infer DFE based on best demographic parameters
         demog_params = model_params_dict[best_model]
