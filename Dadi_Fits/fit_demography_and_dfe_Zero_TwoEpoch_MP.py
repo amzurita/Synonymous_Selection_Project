@@ -492,7 +492,7 @@ class DemographicInference():
             elif model == 'two_epoch':
                 # Allow for growth or decay
                 upper_bound = [400, 20]
-                lower_bound = [1.001, 0]
+                lower_bound = [0.001, 0]
                 # 25 initial guesses
                 initial_guesses = []
                 initial_guesses.append([1.01, 5])
