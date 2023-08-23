@@ -733,10 +733,14 @@ class DemographicInference():
             func_sel = self.bottlegrowth_sel
         elif best_model == 'three_epoch':
             func_sel = self.three_epoch_sel
-        elif best_model == 'one_epoch':
+        else:
             # Best model is one-epoch
+            # There is no way to incorporate selection in a one-epoch model
+            # We use two epoch assumption instead, but modifying the parameters
+            #to force essentially a one epoch
             one_epoch_bool = True
-            func_sel = dadi.Demographics1D.snm
+            model_params_dict['one_epoch']=[1,0.5] #1 indicates no size change, 0.5 arbitrary
+            func_sel = self.two_epoch_sel
 
         # Infer DFE based on best demographic parameters
         demog_params = model_params_dict[best_model]
