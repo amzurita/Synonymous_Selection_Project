@@ -67,6 +67,18 @@ class DemographicInference():
             '--mask_doubletons', dest='mask_doubletons',
             help=('Boolean flag for masking doublestons in Spectrum.'),
             action='store_true')
+        parser.add_argument(
+            '--force_demparam', dest='force_demparam',
+            help=('Boolean flag for forcing the demographic parameters instead of doing demographic inference. Requires --force_T and --force_nu to be specified'),
+            action='store_true')
+        parser.add_argument(
+            '--force_nu', dest='forced_nu',
+            help=('Force the initial demographic parameter nu when performing two epoch demographic inferences'),
+            type=float, required='--force_demparam' in sys.argv)
+        parser.add_argument(
+            '--force_T', dest='forced_T',
+            help=('Force the initial demographic parameter T when performing two epoch demographic inferences'),
+            type=float, required='--force_demparam' in sys.argv)
         parser.set_defaults(mask_singletons=False)
         parser.set_defaults(mask_doubletons=False)
         parser.add_argument(
@@ -371,6 +383,9 @@ class DemographicInference():
         outprefix = args['outprefix']
         mask_singletons = args['mask_singletons']
         mask_doubletons = args['mask_doubletons']
+        force_demparam=args['force_demparam']
+        forced_T=args['forced_T']
+        forced_nu=args['forced_nu']
 
         # Numpy options
         numpy.set_printoptions(linewidth=numpy.inf)
@@ -507,7 +522,7 @@ class DemographicInference():
                 initial_guesses.append([1.02, 0.2])
                 initial_guesses.append([1.02, 0.2])
                 initial_guesses.append([1.02, 0.3])
-                initial_guesses.append([1.02, 0.3])
+                initial_guesses.append([1.43468036, 1.90147531])
                 initial_guesses.append([1.02, 0.3])
                 initial_guesses.append([1.01, 5])
                 initial_guesses.append([1.01, 6])
@@ -516,10 +531,17 @@ class DemographicInference():
                 initial_guesses.append([3.33, 0.000001])
                 initial_guesses.append([3.66, 0.000001])
                 initial_guesses.append([1.01, 0.000001])
-                initial_guesses.append([1.01, 0.000001])
+                initial_guesses.append([1.5504892, 2.30528387])
                 initial_guesses.append([13, 15])
                 initial_guesses.append([25, 15])
                 initial_guesses.append([100, 15])
+
+                #Check if we are forcing the initial parameters
+                if forced_nu:
+                    initial_guesses=[[forced_nu,guess[1]] for guess in initial_guesses]
+                if forced_T:
+                    initial_guesses=[[guess[0],forced_T] for guess in initial_guesses]
+
                 demography_file = two_epoch_demography
                 func_ex = dadi.Numerics.make_extrap_log_func(self.two_epoch)
                 logger.info('Beginning demographic inference for two-epoch '
@@ -633,23 +655,31 @@ class DemographicInference():
             with open(demography_file, 'w') as f:
                 max_likelihood = -1e25 # Assume impossibly low likelihood
                 for i in range(25):
-                    # Start at initial guess i from one of 25
-                    p0 = initial_guesses[i]
-                    # Randomly perturb parameters before optimization.
-                    p0 = dadi.Misc.perturb_params(
-                        p0, fold=1, upper_bound=upper_bound,
-                        lower_bound=lower_bound)
-                    logger.info(
-                        'Beginning optimization with guess, {0}.'.format(p0))
-                    # Fit MLE demographic model
-                    popt = dadi.Inference.optimize_log_lbfgsb(
-                        p0=p0, data=syn_data, model_func=func_ex, pts=pts_l,
-                        lower_bound=lower_bound,
-                        upper_bound=upper_bound,
-                        verbose=len(p0), maxiter=50)
-                    logger.info(
-                        'Finished optimization with guess, ' + str(p0) + '.')
-                    logger.info('Best fit parameters: {0}.'.format(popt))
+
+                    #Entirely force demographic parameters and ignore opimization
+                    if model=='two_epoch' and force_demparam:
+                        logger.info('Forcing demographic parameters and ignoring optimization')
+                        logger.info('Forced parameters (nu,T):'+str(forced_nu)+','+str(forced_T))
+                        popt=[forced_nu, forced_T]
+                    else:
+                        # Start at initial guess i from one of 25
+                        p0 = initial_guesses[i]
+                        # Randomly perturb parameters before optimization.
+                        p0 = dadi.Misc.perturb_params(
+                            p0, fold=1, upper_bound=upper_bound,
+                            lower_bound=lower_bound)
+                        logger.info(
+                            'Beginning optimization with guess, {0}.'.format(p0))
+                        # Fit MLE demographic model
+                        popt = dadi.Inference.optimize_log_lbfgsb(
+                            p0=p0, data=syn_data, model_func=func_ex, pts=pts_l,
+                            lower_bound=lower_bound,
+                            upper_bound=upper_bound,
+                            verbose=len(p0), maxiter=50)
+                        logger.info(
+                            'Finished optimization with guess, ' + str(p0) + '.')
+                        logger.info('Best fit parameters: {0}.'.format(popt))
+
                     # Calculate the best-fit model allele-frequency spectrum.
                     # Note, this spectrum needs to be multiplied by "theta".
                     non_scaled_spectrum = func_ex(popt, syn_ns, pts_l)
@@ -706,6 +736,23 @@ class DemographicInference():
         # Use best fit demographic model for DFE inference
         best_model = max(model_LL_dict, key=model_LL_dict.get)
 
+        #Check that the best model is at least 3 loglikelihood units over the
+        #one epoch ll. This test is based on the Wilks Theorem
+        one_epoch_likelihood=model_LL_dict['one_epoch']
+        logger.info('One Epoch Likelihood: '+str(one_epoch_likelihood))
+
+        #Take the difference
+        best_model_ll=model_LL_dict[best_model]
+        ll_difference_models=best_model_ll-one_epoch_likelihood
+        logger.info('Best model:'+best_model)
+        logger.info('Best model ll: '+str(best_model_ll))
+        logger.info('Model difference in ll:'+str(ll_difference_models))
+        if ll_difference_models > 3:
+            logger.info("Higher than 3 ll difference, best models is:"+best_model)
+        else:
+            logger.info("Lest than 3 ll difference, use one-epoch model")
+            best_model='one_epoch'
+
         one_epoch_bool = False
         if best_model == 'exponential_growth':
             func_sel = self.growth_sel
@@ -718,9 +765,10 @@ class DemographicInference():
         else:
             # Best model is one-epoch
             # There is no way to incorporate selection in a one-epoch model
-            # We use two epoch assumption instead
+            # We use two epoch assumption instead, but modifying the parameters
+            #to force essentially a one epoch
             one_epoch_bool = True
-            best_model = 'two_epoch'
+            model_params_dict['one_epoch']=[1,0.5] #1 indicates no size change, 0.5 arbitrary
             func_sel = self.two_epoch_sel
 
         # Infer DFE based on best demographic parameters
@@ -788,6 +836,10 @@ class DemographicInference():
                 poisson_ll_nonsyn = dadi.Inference.ll(model=expected_sfs, data=nonsyn_data)
                 gamma_max_likelihoods.append(poisson_ll_nonsyn)
                 gamma_guesses[poisson_ll_nonsyn] = popt
+
+                #Set the initial guess to whatever the last best guess was?
+                initial_guess=popt
+                
             except Exception as e:
                 logger.info('Exception encountered in optimization, error as follows:')
                 logger.info(e)
