@@ -3,6 +3,7 @@ initialize() {
 
 	// This are the beginning parameters for the syn selection coeffitient and proportion of selected syn mutations.
 	// syn_s = asFloat(10E-4); // Range from 10E-4 to 10E-2, specified in the input by -d
+	//recom_rate = 1e-8; // This is the recombination rate, which is specified in the input by -d
 	syn_nonselected_prop = asFloat(0); // Percentage of syn non-selected. For the future.
 	defineConstant("path","/u/project/klohmuel/amzurita/Synonimous_Selection_Simulations/sym_outputs"); //insert path, for the output
 	defineConstant("name_append",run_name_output);
@@ -72,7 +73,7 @@ initialize() {
 	//initializeGenomicElement(g2, base, base + nc_length - 1);
 
 	// uniform recombination along the chromosome
-	initializeRecombinationRate(1e-8);
+	initializeRecombinationRate(recom_rate);
 }
 
 // create a population of 10000 individuals

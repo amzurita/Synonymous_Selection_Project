@@ -808,7 +808,7 @@ class DemographicInference():
         # Assume gamma-distributed DFE
         BETAinit = 3 * max_gam
         initial_guess = [1e-3, BETAinit]
-        upper_beta = 12 * max_gam
+        upper_beta = 1500 * max_gam
         lower_bound = [1e-3, 1e-2]
         upper_bound = [100, upper_beta]
         dfe_optimization=Selection.gamma_dist
@@ -816,6 +816,8 @@ class DemographicInference():
         # Track DFE inferences to find best MLE
         gamma_max_likelihoods = []
         gamma_guesses = dict()
+
+        logger.info('Mamimum bounds for shape and scale, {0}.'.format(upper_bound))
 
         for i in range(25):
             p0 = initial_guess
@@ -834,12 +836,12 @@ class DemographicInference():
                 #Compute the poisson log likelihood
                 expected_sfs = spectra.integrate(popt, None, DFE.PDFs.gamma, theta_nonsyn, None)
                 poisson_ll_nonsyn = dadi.Inference.ll(model=expected_sfs, data=nonsyn_data)
-                gamma_max_likelihoods.append(poisson_ll_nonsyn)
                 gamma_guesses[poisson_ll_nonsyn] = popt
+                gamma_max_likelihoods.append(poisson_ll_nonsyn)
 
                 #Set the initial guess to whatever the last best guess was?
                 initial_guess=popt
-                
+
             except Exception as e:
                 logger.info('Exception encountered in optimization, error as follows:')
                 logger.info(e)
