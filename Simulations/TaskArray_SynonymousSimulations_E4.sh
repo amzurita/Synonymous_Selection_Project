@@ -8,7 +8,6 @@
 #$ -cwd
 #$ -M amzurita
 #$ -l highp
-#$ -l group=eeskin
 #$ -l h_data=16G
 #$ -l time=48:00:00
 #$ -m bea
