@@ -1,0 +1,190 @@
+// set up a simple neutral simulation
+initialize() {
+	defineConstant("path","/u/project/klohmuel/amzurita/Synonimous_Selection_Simulations/sym_outputs"); //insert path, for the output
+	defineConstant("name_append",run_name_output);
+
+	//debugging
+	print(path);
+	print(name_append);
+	towrite = paste("syn_sfs_", name_append, "sample_size", ".tsv", sep = "");
+	fullpath = paste(path, towrite, sep = "/");
+	print(towrite);
+	print(fullpath);
+
+	// from Rodrigues 2023
+	initializeMutationRate(2e-8);
+	initializeRecombinationRate(1e-8);
+
+	// Initializing mutation types
+	//m1: Synonimous muts.
+	initializeMutationType("m1", 0.5, "f", 0.0); //NEED TO CHANGE
+
+	//m2 mutation type: deleterious. Parameters from Kim 2017 human DFE
+	initializeMutationType("m2", 0.5,"g", -0.01314833,0.186);
+
+	//total sequence length. 4Mb
+	defineConstant("seqLength", 4000000);
+
+	//set ratio of NS:SYN as 2.31:1 but with 3.1% of NS muts as neutral
+	initializeGenomicElementType("g1", c(m1, m2), c(30.2, 69.8));
+	initializeGenomicElementType("g2", m1, 1); //This is suppose to be a non-coding element. Mutations are ignored in this element.
+
+	//Read files that contain lists of nc-elements (combines both exons and non-coding) and introns elements.
+	exon_file="/u/project/klohmuel/amzurita/Synonimous_Selection_Simulations/HumanSimulations/chr1_exonlengths.txt";
+	non_coding_file="/u/project/klohmuel/amzurita/Synonimous_Selection_Simulations/HumanSimulations/chr1_noncodinglengths.txt";
+
+	exon_content = readFile(exon_file);
+	non_coding_content = readFile(non_coding_file);
+	exon_lengths = sapply(exon_content, "asInteger(applyValue);");
+	non_coding_lenghts = sapply(non_coding_content, "asInteger(applyValue);");
+
+	//Create a human-like chromosome sampling from Chr1 annotations
+	// Generate random genes along the chromosome
+	base = 0;
+	nc_length_total = 0;
+	ex_length_total = 0;
+
+	while (base < seqLength) {
+		// make additional noncoding-exon pairs
+
+		//Non-coding
+		noncoding_length = sample(non_coding_lenghts, 1);
+		nc_length_total = nc_length_total + noncoding_length;
+		//ignore noncoding elements for computational efficiency
+		// initializeGenomicElement(g2, base, base + in_length - 1);
+		base = base + noncoding_length;
+
+		//Exon
+		ex_length = sample(exon_lengths, 1)+ 1;
+		ex_length_total = ex_length_total + ex_length;
+		initializeGenomicElement(g1, base, base + ex_length - 1);
+		base = base + ex_length;
+	}
+
+	//Add a final non-coding region
+	noncoding_length = sample(non_coding_lenghts, 1);
+	nc_length_total = nc_length_total + noncoding_length;
+	//ignore noncoding elements for computational efficiency
+	// initializeGenomicElement(g2, base, base + in_length - 1);
+	base = base + noncoding_length;
+
+}
+
+
+// INITIALIZE the ancestral African population of size 11293
+1 { sim.addSubpop("p1", asInteger(11293)); }
+
+// END BURN-IN period of 10*N=112930 generations (specific to SLiM recipe); EXPAND the African population
+112930 { p1.setSubpopulationSize(23721); } // paper rounds to 23721
+
+// SPLIT Eurasians (pEurAsia, p2) from Africans (pAfrica, p1) and SET UP MIGRATION between them
+// This occurs 4103 generations (119000 years) ago; paper rounds to 4103 gens (51000 yr)
+// Relative to beginning, this is generation 125241.34-4103=121138
+121138 {
+	sim.addSubpopSplit("p2", asInteger(2831), p1); //
+	p1.setMigrationRates(c(p2), c(16.8e-5)); // paper rounds to 15e-5
+	p2.setMigrationRates(c(p1), c(16.8e-5)); // paper rounds to 15e-5
+}
+
+// SPLIT p2 into European (p2) and East Asian (p3) subpopulations; RESIZE; SET UP MIGRATION between them
+// Relative to beginning, this is generation 79024-939.8072428=78084
+123655 {
+	sim.addSubpopSplit("p3", 1019, p2); // paper rounds to 1019
+	p2.setSubpopulationSize(2512);  // reduce European size; paper rounds to 2512
+
+	// Set migration rates
+	p1.setMigrationRates(c(p2, p3), c(1.14e-5, 0.56e-5));
+	p2.setMigrationRates(c(p1, p3), c(1.14e-5, 4.75e-5)); // paper rounds to c(2.5e-5, 3.11e-5)
+	p3.setMigrationRates(c(p1, p2), c(0.56e-5, 4.75e-5)); // paper rounds to c(0.78e-5, 3.11e-5)
+}
+
+// SET UP EXPONENTIAL GROWTH in Europe (p2) and East Asia (p3) until the end of the simulation
+// Where N(0) is the base subpopulation size and t = gen - 123655:
+//    N(Europe) should be int(round(N(0) * (1 + 0.0016)^t)), i.e., growth is r=0.16% per generation
+//    N(East Asia) should be int(round(N(0) * (1 + 0.0026)^t)), i.e., growth is r=0.26% per generation
+123655:125242 {
+	t = sim.generation - 123655;
+	p2_size = round(2512 * (1 + 0.0016)^t); // paper rounds to N(0)=2512 and r=0.0016
+	p3_size = round(1019 * (1 + 0.0026)^t); // paper rounds to N(0)=1019 and r=0.0026
+
+	p2.setSubpopulationSize(asInteger(p2_size));
+	p3.setSubpopulationSize(asInteger(p3_size));
+}
+
+//SET UP SPLIT of Japan population (p4) from Asian (chinese) population (p3).
+124931 {
+	sim.addSubpopSplit("p4", asInteger(4384), p3); //
+	p3.setMigrationRates(c(p4), c(3.3e-5)); // paper rounds to 15e-5
+	p4.setMigrationRates(c(p3), c(3.3e-5)); // paper rounds to 15e-5
+}
+
+//SET UP EXPONENTIAL growth in Japan
+124931:125242 {
+	t = sim.generation - 124931;
+	p4_size = round(4384 * (1 + 0.0129)^t); // paper rounds to N(0)=4384 and r0.0129
+}
+
+//output SFS, for each generation
+1:125242 late(){
+	if (sim.generation % 1000 == 0) { print(sim.generation); }
+}
+
+
+// Output the SFSs at the end of the simulation for varing sample sizes
+125242 late() {
+
+	sample_size = 100;
+
+	populations_tosample=c(p1,p2);
+	population_ids_tosample=c("African", "European");
+
+	//For debugging propouses, print the population sizes
+	for (pop in sim.subpopulations){
+		catn(c("Population ID: ", pop.id, " Size: ", pop.individualCount));
+	}
+
+
+	for (i in 1:length(populations_tosample)){
+
+		pop=populations_tosample[i-1];
+		pop_id=population_ids_tosample[i-1];
+
+		sampledHaploidGenomes=sample(p1.genomes, sample_size); //get 100 genomes
+		m1MutationsInSample=unique(sampledHaploidGenomes.mutationsOfType(m1)); //get unique m1 mutations in sample, returns vector of m1 mutations
+		m1counts=sampledHaploidGenomes.mutationCountsInGenomes(mutations=m1MutationsInSample); //m1counts = integer vector w/ frequency counts of mutations, count for each position
+		m2MutationsInSample=unique(sampledHaploidGenomes.mutationsOfType(m2)); //get unique m2 mutations in sample, returns vector of m2 mutations
+		m2counts=sampledHaploidGenomes.mutationCountsInGenomes(mutations=m2MutationsInSample); //m1counts = integer vector w/ frequency counts of mutations, count for each position
+
+		m1_sfs = c();
+		m2_sfs = c();
+
+		for (i in seq(1,sample_size)){ //for 1 to 10
+
+			count = sum(m1counts==i); //i = frequency, ex sum counts that equal 1, 2, 3, 4....10
+			m1_sfs = c(m1_sfs, count);
+
+			count = sum(m2counts==i);
+			m2_sfs = c(m2_sfs, count);
+		}
+
+		//sfs for synonymous
+		syn_sfs = m1_sfs;
+		syn_to_print = paste(asString(syn_sfs), sep = "	");
+		name_sfs=paste("syn_sfs_",pop_id,"_", sep = "");
+		towrite = paste(name_sfs, name_append, ".tsv", sep = "");
+		fullpath = paste(path, towrite, sep = "/");
+		writeFile(fullpath, syn_to_print, append = T);
+
+		//sfs for nonsynonymous
+		del_sfs = m2_sfs;
+		del_to_print = paste(asString(del_sfs), sep = "	");
+		name_sfs=paste("nonsyn_sfs_",pop_id,"_", sep = "");
+		towrite = paste(name_sfs, name_append, ".tsv", sep = "");
+		fullpath = paste(path, towrite, sep = "/");
+		writeFile(fullpath, del_to_print, append = T);
+		print("printed");
+
+	}
+
+
+}
