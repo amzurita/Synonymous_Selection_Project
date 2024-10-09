@@ -148,13 +148,5 @@ initialize() {
 
 	}
 
-	// Write out the simulation lenght
-	name_length_file=paste("length_ex_total_nosyn",pop_id,"_", sep = "");
-	towrite = paste(name_length_file, name_append, ".txt", sep = "");
-	fullpath = paste(path, towrite, sep = "/");
-	outputline = paste("Total Exon Length:",asString(ex_length_total));
-	writeFile(fullpath,outputline);
-
-	print("Printed length file");
 
 }
