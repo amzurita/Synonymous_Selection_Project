@@ -13,8 +13,8 @@
 #$ -m bea
 
 #EDIT THIS LINE WITH THE NUMBER OF SAMPLES (See the trick at the end of the script to count)
-#$ -t 1-200
+#$ -t 1-2000
 
 . /u/local/Modules/default/init/modules.sh
 
-/u/project/klohmuel/amzurita/Tools/slim_build/slim -d "run_name_output='humansim_synsel_replicate${SGE_TASK_ID}'" HumanPopSynSelection.slim
+/u/project/klohmuel/amzurita/Tools/slim_build/slim -d "run_name_output='humansim_synsel_extendedreplicate${SGE_TASK_ID}'" HumanPopSynSelection.slim

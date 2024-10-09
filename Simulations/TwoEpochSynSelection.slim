@@ -68,6 +68,14 @@ initialize() {
 	// initializeGenomicElement(g2, base, base + in_length - 1);
 	base = base + noncoding_length;
 
+	// Write out the simulation lenght
+	towrite = paste("length_ex_total_nosyn_", name_append, ".txt", sep = "");
+	fullpath = paste(path, towrite, sep = "/");
+	outputline = paste("Total Exon Length:",asString(ex_length_total));
+	writeFile(fullpath,outputline);
+
+	print("Printed length file");
+
 }
 
 
