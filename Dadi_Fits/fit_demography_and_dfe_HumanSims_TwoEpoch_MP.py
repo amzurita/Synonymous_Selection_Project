@@ -776,6 +776,7 @@ class DemographicInference():
         # Infer DFE based on best demographic parameters
         demog_params = model_params_dict[best_model]
         theta_syn = model_thetas_dict[best_model]
+        theta_nonsyn = theta_syn * 2.311
 
         # Define standard mutation rates and lenghts
         #Ls = 5323177 #Change this as necessary, should be set from inputs
