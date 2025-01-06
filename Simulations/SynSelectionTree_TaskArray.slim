@@ -11,9 +11,9 @@ initialize() {
 	//debugging
 	print(path);
 	print(name_append);
-	towrite = paste("syn_sfs_", name_append, "sample_size", ".tsv", sep = "");
-	fullpath = paste(path, towrite, sep = "/");
-	print(towrite);
+	treeoutputname = paste("tree_", name_append, ".trees", sep = "");
+	fullpath = paste(path, treeoutputname, sep = "/");
+	print(treeoutputname);
 	print(fullpath);
 
 	// set the mutation rate
@@ -103,7 +103,5 @@ initialize() {
 
 // Output the tree at the end of the simulation
 101000 late() {
-	treeoutputname = paste("tree_", name_append, ".trees", sep = "");
-	fullpath = paste(path, treeoutputname, sep = "/");
 	sim.treeSeqOutput(fullpath);
 }
