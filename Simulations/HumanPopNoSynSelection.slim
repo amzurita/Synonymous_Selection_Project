@@ -12,7 +12,7 @@ initialize() {
 	print(fullpath);
 
 	// from Rodrigues 2023
-	initializeMutationRate(2e-8);
+	initializeMutationRate(1.44E-8);
 	initializeRecombinationRate(1e-8);
 
 	// Initializing mutation types
@@ -186,5 +186,13 @@ initialize() {
 
 	}
 
+	// Write out the simulation lenght
+	name_length_file=paste("length_ex_total_nosyn",pop_id,"_", sep = "");
+	towrite = paste(name_length_file, name_append, ".txt", sep = "");
+	fullpath = paste(path, towrite, sep = "/");
+	outputline = paste("Total Exon Length:",asString(ex_length_total));
+	writeFile(fullpath,outputline);
+
+	print("Printed length file");
 
 }
