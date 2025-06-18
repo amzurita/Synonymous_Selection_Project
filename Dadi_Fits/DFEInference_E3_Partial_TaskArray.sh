@@ -7,14 +7,13 @@
 #$ -j y
 #$ -cwd
 #$ -M amzurita
-#$ -l highp
 #$ -l h_data=8G
-#$ -l time=48:00:00
+#$ -l time=24:00:00
 #$ -m bea
 #$ -pe shared 4
 
 #Line that makes this a task array
-#$ -t 1-10
+#$ -t 1-20
 
 #Load modules to be used
 . /u/local/Modules/default/init/modules.sh
