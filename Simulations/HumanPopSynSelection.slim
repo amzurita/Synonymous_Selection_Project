@@ -11,13 +11,13 @@ initialize() {
 	print(towrite);
 	print(fullpath);
 
-	// from Rodrigues 2023
+	// from Garvel et al 2017
 	initializeMutationRate(1.44E-8);
 	initializeRecombinationRate(1e-8);
 
 	// Initializing mutation types
 	//m1: Synonimous muts.
-	initializeMutationType("m1", 0.5, "g", -0.002545454545,0.14); //Ragsdale et al. Bioarxiv
+	initializeMutationType("m1", 0.5, "g", -0.0006818383069157886,0.14); //Ragsdale et al. Bioarxiv
 
 	//m2 mutation type: deleterious. Parameters from Kim 2017 human DFE
 	initializeMutationType("m2", 0.5,"g", -0.01314833,0.186);

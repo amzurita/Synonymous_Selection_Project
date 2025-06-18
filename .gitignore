@@ -6,3 +6,10 @@ Simulations/SynSelection_inLaptop.slim
 
 #Folders
 /sym_outputs/*
+Dadi_Fits/Selection.py
+Simulations/Average_Exome_LengthPerSim.txt
+Simulations/bgnc_dem_fromSwetha.slim
+Simulations/ObtainCodingLengthHumanSims
+Simulations/ObtainCodingLengthHumanSims.slim
+Simulations/TaskArray_TwoEpochOriginalNoExpansion_0.sh
+Simulations/TwoEpoch_Original_NoExpansion.slim
